@@ -150,8 +150,22 @@ export default function BatchDetailView() {
                 <span className="font-mono text-slate-900 font-bold">{batch.original_quantity} units</span>
               </div>
               <div>
-                <span className="text-slate-400 block">Current Verified Quantity</span>
-                <span className="font-mono text-slate-900 font-bold">{batch.current_quantity} units</span>
+                <span className="text-slate-400 block">Declared Return Qty</span>
+                <span className="font-mono text-slate-900 font-bold">{batch.declared_quantity ?? batch.return_quantity} units</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block">Verified Handoff Qty</span>
+                <span className="font-mono text-slate-900 font-bold">{batch.verified_quantity ?? batch.current_quantity} units</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block">Certified Destroyed Qty</span>
+                <span className="font-mono text-emerald-700 font-bold">{batch.certified_quantity ?? batch.destroyed_quantity} units</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block">Unaccounted / Loss Qty</span>
+                <span className={`font-mono font-bold ${(batch.unaccounted_quantity > 0) ? 'text-red-600' : 'text-slate-900'}`}>
+                  {batch.unaccounted_quantity ?? 0} units
+                </span>
               </div>
             </div>
 

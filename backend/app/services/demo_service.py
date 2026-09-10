@@ -157,7 +157,7 @@ class DemoService:
             location_city="Bengaluru",
             quantity=470,
             action_title="Destruction Certificate Linked (#DC-90812)",
-            details="Certificate uploaded and cryptographically validated against batch twin.",
+            details="Certificate uploaded for 470 verified units. 30 missing transit units remain UNACCOUNTED.",
             timestamp=now - timedelta(days=2)
         )
         # 8. FRAUD EVENT: Scanned at Madurai Pharmacy!
@@ -168,9 +168,9 @@ class DemoService:
             actor_role="RETAILER",
             organization_name="City Healthcare Pharmacy",
             location_city="Madurai",
-            quantity=470,
-            action_title="🚨 CRITICAL RE-ENTRY FRAUD SCAN DETECTED",
-            details="Batch P7788 was scanned into retail POS inventory in Madurai 2 days AFTER certificate confirmed incineration!",
+            quantity=30,
+            action_title="🚨 30 UNACCOUNTED UNITS DETECTED IN ACTIVE POS",
+            details="30 unaccounted units of Batch P7788 (missing during distributor transit verification) were scanned for active retail sale in Madurai POS!",
             is_suspicious=True,
             timestamp=now - timedelta(hours=3)
         )
@@ -223,11 +223,11 @@ class DemoService:
             alert_type="RE_ENTRY",
             severity="CRITICAL",
             batch_id=batch.id,
-            title="CRITICAL RE-ENTRY DETECTED: Batch P7788",
-            reason="Batch P7788 was scanned at City Healthcare Pharmacy in Madurai despite official destruction certificate #DC-90812 issued 3 days ago.",
+            title="CRITICAL RE-ENTRY DETECTED: 30 Unaccounted Units (Batch P7788)",
+            reason="30 missing/unaccounted units of Batch P7788 (from 500 declared vs 470 verified return) were scanned for active retail billing at City Healthcare Pharmacy in Madurai.",
             location_city="Madurai",
             status="OPEN",
-            recommended_action="Dispatch State Drug Inspector immediately to Madurai outlet. Quarantine stock batch P7788.",
+            recommended_action="Dispatch State Drug Inspector immediately to Madurai outlet. Quarantine all Batch P7788 stock.",
             timestamp=now - timedelta(hours=3)
         )
         a2 = Alert(
@@ -236,7 +236,7 @@ class DemoService:
             severity="MEDIUM",
             batch_id=batch.id,
             title="Quantity Loss During Distributor Transit",
-            reason="Retailer declared 500 units; Distributor received 470 units (30 missing).",
+            reason="Retailer declared 500 units; Distributor verified 470 units (30 unaccounted units flagged).",
             location_city="Chennai",
             status="UNDER_INVESTIGATION",
             recommended_action="Cross-examine transit weight logs between Chennai and Bengaluru.",
@@ -251,21 +251,21 @@ class DemoService:
             status="OPEN",
             priority="CRITICAL",
             assigned_to="Drug Controller Anti-Counterfeiting Cell",
-            findings="Batch P7788 exhibited quantity discrepancy in transit, followed by confirmed incineration certificate. Subsequent scan in Madurai confirms diverted stock re-entry attempt.",
+            findings="Batch P7788 had 500 declared units, 470 verified & incinerated (Certificate #DC-90812). The 30 unaccounted transit units re-entered active retail billing at Madurai.",
             actions_taken="Pharmacy license notice served to Madurai retailer. Central batch registry locked."
         )
         db.add(inv)
 
-        # Re-score
+        # Re-score dynamically via RiskScorer
         score, level, anomalies = RiskScorer.calculate_risk(batch)
-        batch.risk_score = 94
+        batch.risk_score = score
         db.commit()
 
         return {
             "batch_number": "P7788",
             "batch_id": batch.id,
-            "risk_score": 94,
-            "risk_level": "CRITICAL",
+            "risk_score": score,
+            "risk_level": level,
             "status": "RE_ENTRY_DETECTED",
-            "message": "Demo Fraud Scenario executed successfully! Batch P7788 re-entry fraud logged and risk score calculated at 94/100."
+            "message": f"Demo Fraud Scenario executed successfully! Batch P7788 re-entry fraud logged and risk score calculated at {score}/100."
         }

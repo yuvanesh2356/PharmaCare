@@ -30,7 +30,7 @@ function MainLayout() {
 
   const fetchAlerts = async () => {
     try {
-      const res = await api.getAlerts();
+      const res = await api.getAlerts(user?.role ? { role: user.role } : {});
       setAlertCount(res.filter((a) => a.status === 'OPEN').length);
     } catch (err) {
       console.error(err);

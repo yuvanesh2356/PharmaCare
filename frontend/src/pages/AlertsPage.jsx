@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldAlert, AlertTriangle, CheckCircle, Search, Filter } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 
 export default function AlertsPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [severityFilter, setSeverityFilter] = useState('ALL');
@@ -12,7 +14,7 @@ export default function AlertsPage() {
   const loadAlerts = async () => {
     setLoading(true);
     try {
-      const res = await api.getAlerts();
+      const res = await api.getAlerts(user?.role ? { role: user.role } : {});
       setAlerts(res);
     } catch (err) {
       console.error(err);

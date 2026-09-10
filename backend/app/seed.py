@@ -151,8 +151,18 @@ def seed_db():
         p1 = Product(name="Paracetamol 500mg", generic_name="Acetaminophen", dosage_form="Tablet", manufacturer_name="MedLife Pharma Ltd")
         p2 = Product(name="Cetirizine 10mg", generic_name="Cetirizine Hydrochloride", dosage_form="Tablet", manufacturer_name="MedLife Pharma Ltd")
         p3 = Product(name="Amoxicillin 500mg", generic_name="Amoxicillin Trihydrate", dosage_form="Capsule", manufacturer_name="MedLife Pharma Ltd")
+        p4 = Product(name="Azithromycin 500mg", generic_name="Azithromycin Dihydrate", dosage_form="Tablet", manufacturer_name="MedLife Pharma Ltd")
+        p5 = Product(name="Metformin 500mg", generic_name="Metformin Hydrochloride", dosage_form="Tablet", manufacturer_name="MedLife Pharma Ltd")
+        p6 = Product(name="Pantoprazole 40mg", generic_name="Pantoprazole Sodium", dosage_form="Tablet", manufacturer_name="MedLife Pharma Ltd")
+        p7 = Product(name="Amoxicillin 250mg", generic_name="Amoxicillin Trihydrate", dosage_form="Capsule", manufacturer_name="MedLife Pharma Ltd")
+        p8 = Product(name="Ibuprofen 400mg", generic_name="Ibuprofen", dosage_form="Tablet", manufacturer_name="MedLife Pharma Ltd")
+        p9 = Product(name="Doxycycline 100mg", generic_name="Doxycycline Hyclate", dosage_form="Capsule", manufacturer_name="MedLife Pharma Ltd")
+        p10 = Product(name="ORS Sachets", generic_name="Oral Rehydration Salts", dosage_form="Powder", manufacturer_name="MedLife Pharma Ltd")
+        p11 = Product(name="Levocetirizine 5mg", generic_name="Levocetirizine Dihydrochloride", dosage_form="Tablet", manufacturer_name="MedLife Pharma Ltd")
+        p12 = Product(name="Omeprazole 20mg", generic_name="Omeprazole", dosage_form="Capsule", manufacturer_name="MedLife Pharma Ltd")
+        p13 = Product(name="Cefixime 200mg", generic_name="Cefixime Trihydrate", dosage_form="Tablet", manufacturer_name="MedLife Pharma Ltd")
 
-        db.add_all([p1, p2, p3])
+        db.add_all([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13])
         db.commit()
 
         now = datetime.utcnow()
@@ -170,7 +180,7 @@ def seed_db():
             current_owner_id=ret1_org.id,
             current_location_city="Chennai",
             status="ACTIVE",
-            risk_score=8
+            risk_score=0
         )
 
         # Batch 2: Near Expiry Batch (C2045)
@@ -185,7 +195,7 @@ def seed_db():
             current_owner_id=ret1_org.id,
             current_location_city="Chennai",
             status="ACTIVE",
-            risk_score=22
+            risk_score=0
         )
 
         # Batch 3: Quantity Discrepancy Batch (A4421)
@@ -201,7 +211,7 @@ def seed_db():
             current_owner_id=dist_org.id,
             current_location_city="Chennai",
             status="DISTRIBUTOR_RECEIVED",
-            risk_score=46
+            risk_score=20
         )
 
         # Batch 4: Critical Fraud Case (P7788)
@@ -217,10 +227,164 @@ def seed_db():
             current_owner_id=waste_org.id,
             current_location_city="Bengaluru",
             status="DESTROYED",
-            risk_score=94
+            risk_score=74
         )
 
-        db.add_all([b1, b2, b3, b4])
+        # 10 Added Demo Batches
+        # Batch 5: Azithromycin 500mg | A3102 | 85 units | 22 days | Expiring Soon | 0
+        b5 = Batch(
+            batch_number="A3102",
+            product_id=p4.id,
+            mfg_date=(now - timedelta(days=340)).strftime("%Y-%m-%d"),
+            expiry_date=(now + timedelta(days=22)).strftime("%Y-%m-%d"),
+            pack_size="10x6 Strips",
+            original_quantity=85,
+            current_quantity=85,
+            current_owner_id=ret1_org.id,
+            current_location_city="Chennai",
+            status="ACTIVE",
+            risk_score=0
+        )
+
+        # Batch 6: Metformin 500mg | M5821 | 320 units | 47 days | Normal Active | 0
+        b6 = Batch(
+            batch_number="M5821",
+            product_id=p5.id,
+            mfg_date=(now - timedelta(days=300)).strftime("%Y-%m-%d"),
+            expiry_date=(now + timedelta(days=47)).strftime("%Y-%m-%d"),
+            pack_size="10x10 Strips",
+            original_quantity=320,
+            current_quantity=320,
+            current_owner_id=ret1_org.id,
+            current_location_city="Chennai",
+            status="ACTIVE",
+            risk_score=0
+        )
+
+        # Batch 7: Pantoprazole 40mg | P6314 | 180 units | 9 days | Expiring Soon | 0
+        b7 = Batch(
+            batch_number="P6314",
+            product_id=p6.id,
+            mfg_date=(now - timedelta(days=350)).strftime("%Y-%m-%d"),
+            expiry_date=(now + timedelta(days=9)).strftime("%Y-%m-%d"),
+            pack_size="10x10 Strips",
+            original_quantity=180,
+            current_quantity=180,
+            current_owner_id=ret1_org.id,
+            current_location_city="Chennai",
+            status="ACTIVE",
+            risk_score=0
+        )
+
+        # Batch 8: Amoxicillin 250mg | A7290 | 95 units | Expired | Return Requested | 15
+        b8 = Batch(
+            batch_number="A7290",
+            product_id=p7.id,
+            mfg_date=(now - timedelta(days=400)).strftime("%Y-%m-%d"),
+            expiry_date=(now - timedelta(days=12)).strftime("%Y-%m-%d"),
+            pack_size="10x10 Strips",
+            original_quantity=95,
+            current_quantity=95,
+            return_quantity=95,
+            current_owner_id=ret1_org.id,
+            current_location_city="Chennai",
+            status="RETURN_REQUESTED",
+            risk_score=15
+        )
+
+        # Batch 9: Ibuprofen 400mg | I4428 | 210 units | 76 days | Normal Active | 0
+        b9 = Batch(
+            batch_number="I4428",
+            product_id=p8.id,
+            mfg_date=(now - timedelta(days=200)).strftime("%Y-%m-%d"),
+            expiry_date=(now + timedelta(days=76)).strftime("%Y-%m-%d"),
+            pack_size="10x10 Strips",
+            original_quantity=210,
+            current_quantity=210,
+            current_owner_id=ret1_org.id,
+            current_location_city="Chennai",
+            status="ACTIVE",
+            risk_score=0
+        )
+
+        # Batch 10: Doxycycline 100mg | D1937 | 64 units | Expired | Distributor Picked Up | 20
+        b10 = Batch(
+            batch_number="D1937",
+            product_id=p9.id,
+            mfg_date=(now - timedelta(days=420)).strftime("%Y-%m-%d"),
+            expiry_date=(now - timedelta(days=25)).strftime("%Y-%m-%d"),
+            pack_size="10x10 Strips",
+            original_quantity=64,
+            current_quantity=64,
+            return_quantity=64,
+            current_owner_id=dist_org.id,
+            current_location_city="Chennai",
+            status="DISTRIBUTOR_RECEIVED",
+            risk_score=20
+        )
+
+        # Batch 11: ORS Sachets | O8210 | 450 units | 31 days | Normal Active | 0
+        b11 = Batch(
+            batch_number="O8210",
+            product_id=p10.id,
+            mfg_date=(now - timedelta(days=330)).strftime("%Y-%m-%d"),
+            expiry_date=(now + timedelta(days=31)).strftime("%Y-%m-%d"),
+            pack_size="50 Sachets",
+            original_quantity=450,
+            current_quantity=450,
+            current_owner_id=ret1_org.id,
+            current_location_city="Chennai",
+            status="ACTIVE",
+            risk_score=0
+        )
+
+        # Batch 12: Levocetirizine 5mg | L3905 | 42 units | 6 days | Expiring Soon | 5
+        b12 = Batch(
+            batch_number="L3905",
+            product_id=p11.id,
+            mfg_date=(now - timedelta(days=360)).strftime("%Y-%m-%d"),
+            expiry_date=(now + timedelta(days=6)).strftime("%Y-%m-%d"),
+            pack_size="10x10 Strips",
+            original_quantity=42,
+            current_quantity=42,
+            current_owner_id=ret1_org.id,
+            current_location_city="Chennai",
+            status="ACTIVE",
+            risk_score=5
+        )
+
+        # Batch 13: Omeprazole 20mg | O5146 | 150 units | Expired | Return Requested | 15
+        b13 = Batch(
+            batch_number="O5146",
+            product_id=p12.id,
+            mfg_date=(now - timedelta(days=450)).strftime("%Y-%m-%d"),
+            expiry_date=(now - timedelta(days=18)).strftime("%Y-%m-%d"),
+            pack_size="10x10 Strips",
+            original_quantity=150,
+            current_quantity=150,
+            return_quantity=150,
+            current_owner_id=ret1_org.id,
+            current_location_city="Chennai",
+            status="RETURN_REQUESTED",
+            risk_score=15
+        )
+
+        # Batch 14: Cefixime 200mg | C6724 | 110 units | 18 days | Expiring Soon | 0
+        b14 = Batch(
+            batch_number="C6724",
+            product_id=p13.id,
+            mfg_date=(now - timedelta(days=340)).strftime("%Y-%m-%d"),
+            expiry_date=(now + timedelta(days=18)).strftime("%Y-%m-%d"),
+            pack_size="10x10 Strips",
+            original_quantity=110,
+            current_quantity=110,
+            current_owner_id=ret1_org.id,
+            current_location_city="Chennai",
+            status="ACTIVE",
+            risk_score=0
+        )
+
+        db.add_all([b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14])
         db.commit()
 
         # Events for Batch 1 (P1001)
@@ -281,11 +445,11 @@ def seed_db():
         e_b4_1 = ChainEvent(event_code="BATCH_CREATED", batch_id=b4.id, actor_name="Dr. R. Sharma", actor_role="MANUFACTURER", organization_name="MedLife Pharma Ltd", location_city="Bengaluru", quantity=500, action_title="Batch Manufactured & Verified", details="CDSCO quality approved.", timestamp=now - timedelta(days=25))
         e_b4_2 = ChainEvent(event_code="INVENTORY_RECEIVED", batch_id=b4.id, actor_name="Apollo Pharmacy Manager", actor_role="RETAILER", organization_name="Apollo Pharmacy Chennai", location_city="Chennai", quantity=500, action_title="Received by Retail Pharmacy", details="Stocked at retail counter.", timestamp=now - timedelta(days=20))
         e_b4_3 = ChainEvent(event_code="RETURN_REQUESTED", batch_id=b4.id, actor_name="S. Kumar", actor_role="RETAILER", organization_name="Apollo Pharmacy Chennai", location_city="Chennai", quantity=500, action_title="Return Initiated (Near Expiry)", details="Reverse logistics started.", timestamp=now - timedelta(days=10))
-        e_b4_4 = ChainEvent(event_code="DISTRIBUTOR_RECEIVED", batch_id=b4.id, actor_name="V. Logistics Inspector", actor_role="DISTRIBUTOR", organization_name="Southern Med Distributors", location_city="Chennai", quantity=470, action_title="Distributor Pickup & Verified (Quantity Mismatch)", details="Declared 500 units, physical count 470.", is_suspicious=True, timestamp=now - timedelta(days=7))
+        e_b4_4 = ChainEvent(event_code="DISTRIBUTOR_RECEIVED", batch_id=b4.id, actor_name="V. Logistics Inspector", actor_role="DISTRIBUTOR", organization_name="Southern Med Distributors", location_city="Chennai", quantity=470, action_title="Distributor Pickup & Verified (Quantity Mismatch)", details="Declared 500 units, physical count 470 (30 missing).", is_suspicious=True, timestamp=now - timedelta(days=7))
         e_b4_5 = ChainEvent(event_code="MANUFACTURER_RECEIVED", batch_id=b4.id, actor_name="QA Dept", actor_role="MANUFACTURER", organization_name="MedLife Pharma Ltd", location_city="Bengaluru", quantity=470, action_title="Confirmed Return at Manufacturer", details="Logged for destruction.", timestamp=now - timedelta(days=5))
         e_b4_6 = ChainEvent(event_code="DESTROYED", batch_id=b4.id, actor_name="GreenWaste Inspector", actor_role="WASTE_FACILITY", organization_name="GreenWaste Eco-Facility", location_city="Bengaluru", quantity=470, action_title="High-Temperature Incineration Completed", details="Incinerated under supervisor audit.", timestamp=now - timedelta(days=3))
-        e_b4_7 = ChainEvent(event_code="CERTIFICATE_UPLOADED", batch_id=b4.id, actor_name="Compliance Verifier", actor_role="WASTE_FACILITY", organization_name="GreenWaste Eco-Facility", location_city="Bengaluru", quantity=470, action_title="Destruction Certificate Linked (#DC-90812)", details="Certificate cryptographically verified.", timestamp=now - timedelta(days=2))
-        e_b4_8 = ChainEvent(event_code="REENTRY_DETECTED", batch_id=b4.id, actor_name="City Med POS Scanner", actor_role="RETAILER", organization_name="City Healthcare Pharmacy", location_city="Madurai", quantity=470, action_title="🚨 CRITICAL RE-ENTRY FRAUD SCAN DETECTED", details="Batch P7788 scanned into Madurai pharmacy POS after incineration!", is_suspicious=True, timestamp=now - timedelta(hours=3))
+        e_b4_7 = ChainEvent(event_code="CERTIFICATE_UPLOADED", batch_id=b4.id, actor_name="Compliance Verifier", actor_role="WASTE_FACILITY", organization_name="GreenWaste Eco-Facility", location_city="Bengaluru", quantity=470, action_title="Destruction Certificate Linked (#DC-90812)", details="Certificate uploaded for 470 verified units. 30 missing transit units remain UNACCOUNTED.", timestamp=now - timedelta(days=2))
+        e_b4_8 = ChainEvent(event_code="REENTRY_DETECTED", batch_id=b4.id, actor_name="City Med POS Scanner", actor_role="RETAILER", organization_name="City Healthcare Pharmacy", location_city="Madurai", quantity=30, action_title="🚨 30 UNACCOUNTED UNITS DETECTED IN ACTIVE POS", details="30 unaccounted units of Batch P7788 (missing during distributor transit verification) were scanned for active retail sale in Madurai POS!", is_suspicious=True, timestamp=now - timedelta(hours=3))
 
         db.add_all([e_b4_1, e_b4_2, e_b4_3, e_b4_4, e_b4_5, e_b4_6, e_b4_7, e_b4_8])
 
@@ -298,16 +462,16 @@ def seed_db():
 
         alt_b4 = Alert(
             alert_code="ALT-P7788-REENTRY", alert_type="RE_ENTRY", severity="CRITICAL",
-            batch_id=b4.id, title="CRITICAL RE-ENTRY FRAUD DETECTED: Batch P7788",
-            reason="Batch P7788 was scanned at City Healthcare Pharmacy in Madurai despite official destruction certificate #DC-90812 issued 3 days ago.",
-            location_city="Madurai", status="OPEN", recommended_action="Dispatch State Drug Inspector immediately to Madurai outlet. Quarantine stock.", timestamp=now - timedelta(hours=3)
+            batch_id=b4.id, title="CRITICAL RE-ENTRY DETECTED: 30 Unaccounted Units (Batch P7788)",
+            reason="30 missing/unaccounted units of Batch P7788 (from 500 declared vs 470 verified return) were scanned for active retail billing at City Healthcare Pharmacy in Madurai.",
+            location_city="Madurai", status="OPEN", recommended_action="Dispatch State Drug Inspector immediately to Madurai outlet. Quarantine all Batch P7788 stock.", timestamp=now - timedelta(hours=3)
         )
         db.add(alt_b4)
 
         inv_b4 = Investigation(
             investigation_code="INV-P7788-FRAUD", batch_id=b4.id, status="OPEN", priority="CRITICAL",
             assigned_to="Drug Controller Anti-Counterfeiting Cell",
-            findings="Batch P7788 exhibited quantity discrepancy in transit, followed by confirmed incineration certificate. Subsequent scan in Madurai confirms diverted stock re-entry attempt.",
+            findings="Batch P7788 had 500 declared units, 470 verified & incinerated (Certificate #DC-90812). The 30 unaccounted transit units re-entered active retail billing at Madurai.",
             actions_taken="Pharmacy license notice served to Madurai retailer."
         )
         db.add(inv_b4)

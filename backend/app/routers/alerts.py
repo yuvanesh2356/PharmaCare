@@ -11,14 +11,30 @@ router = APIRouter(prefix="/alerts", tags=["Alerts"])
 def get_alerts(
     alert_type: Optional[str] = None,
     severity: Optional[str] = None,
+    role: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     query = db.query(Alert)
+    
     if alert_type:
         query = query.filter(Alert.alert_type == alert_type)
     if severity:
         query = query.filter(Alert.severity == severity)
-    
+        
+    # Role-based Alert Ownership Filter
+    if role:
+        role_upper = role.upper()
+        if role_upper == "RETAILER":
+            # Retailers only see expiry, return, and inventory warnings, not global fraud investigation cases
+            query = query.filter(Alert.alert_type.in_(["EXPIRY", "RETURN_ISSUE", "POS_BLOCK"]))
+        elif role_upper == "DISTRIBUTOR":
+            # Distributors see transit, handoff, and quantity discrepancies
+            query = query.filter(Alert.alert_type.in_(["QUANTITY_DISCREPANCY", "HANDOFF_OVERDUE", "TRANSIT_ANOMALY"]))
+        elif role_upper == "MANUFACTURER":
+            # Manufacturers see incoming returns, destruction issues, and batch compliance alerts
+            query = query.filter(Alert.alert_type.in_(["QUANTITY_DISCREPANCY", "CERTIFICATE_MISMATCH", "RE_ENTRY", "BATCH_COMPLIANCE"]))
+        # INVESTIGATOR sees all alerts by default (no filter applied)
+
     alerts = query.order_by(Alert.timestamp.desc()).all()
     results = []
     for a in alerts:

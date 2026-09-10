@@ -12,7 +12,7 @@ export default function RetailerAlertsPage() {
   const loadAlerts = async () => {
     setLoading(true);
     try {
-      const res = await api.getAlerts();
+      const res = await api.getAlerts({ role: 'RETAILER' });
       setAlerts(res);
     } catch (err) {
       console.error('Failed to load alerts:', err);

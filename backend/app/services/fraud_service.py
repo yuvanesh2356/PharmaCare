@@ -18,37 +18,63 @@ class FraudService:
         ]
 
         if batch.status in terminal_states:
-            # Re-entry fraud detected!
-            event = ChainEvent(
-                event_code="REENTRY_DETECTED",
-                batch_id=batch.id,
-                actor_name=f"Billing Terminal / POS",
-                actor_role="RETAILER",
-                organization_name=scanning_pharmacy,
-                location_city=city,
-                quantity=batch.return_quantity or 470,
-                action_title="🚨 Unauthorized Re-Entry Scan Detected",
-                details=f"Batch {batch.batch_number} was scanned at {scanning_pharmacy} ({city}) after entering return/destruction status ({batch.status}).",
-                is_suspicious=True,
-                timestamp=datetime.utcnow()
-            )
-            db.add(event)
+            unaccounted = max(0, (batch.return_quantity or 500) - batch.current_quantity) if batch.current_quantity > 0 else (batch.return_quantity or 30)
+            scan_qty = unaccounted if unaccounted > 0 else batch.current_quantity
+            
+            # Idempotency check: Reuse existing REENTRY_DETECTED event and alert if already present
+            existing_event = db.query(ChainEvent).filter(
+                ChainEvent.batch_id == batch.id,
+                ChainEvent.event_code == "REENTRY_DETECTED",
+                ChainEvent.location_city == city
+            ).first()
 
-            # Generate Alert
-            alert_code = f"ALT-{uuid.uuid4().hex[:6].upper()}"
-            alert = Alert(
-                alert_code=alert_code,
-                alert_type="RE_ENTRY",
-                severity="CRITICAL",
-                batch_id=batch.id,
-                title=f"CRITICAL RE-ENTRY FRAUD: Batch {batch.batch_number}",
-                reason=f"Batch {batch.batch_number} marked as {batch.status} was attempted to be scanned into active inventory/billing at {scanning_pharmacy} in {city}.",
-                location_city=city,
-                status="OPEN",
-                recommended_action="Block point-of-sale billing immediately. Quarantined stock and notify State Drug Control Authority.",
-                timestamp=datetime.utcnow()
-            )
-            db.add(alert)
+            existing_alert = db.query(Alert).filter(
+                Alert.batch_id == batch.id,
+                Alert.alert_type == "RE_ENTRY"
+            ).first()
+
+            if existing_event and existing_alert:
+                score, level, _ = RiskScorer.calculate_risk(batch)
+                return {
+                    "status": "BLOCKED",
+                    "batch_number": batch.batch_number,
+                    "alert_code": existing_alert.alert_code,
+                    "risk_score": score,
+                    "risk_level": level,
+                    "message": f"CRITICAL RE-ENTRY INTERCEPTED: {scan_qty} unaccounted units of Batch {batch.batch_number} (missing during transit verification) were detected entering active retail billing at {scanning_pharmacy} ({city}). Sale BLOCKED."
+                }
+
+            if not existing_event:
+                event = ChainEvent(
+                    event_code="REENTRY_DETECTED",
+                    batch_id=batch.id,
+                    actor_name=f"Billing Terminal / POS",
+                    actor_role="RETAILER",
+                    organization_name=scanning_pharmacy,
+                    location_city=city,
+                    quantity=scan_qty,
+                    action_title=f"🚨 {scan_qty} UNACCOUNTED UNITS DETECTED IN ACTIVE POS",
+                    details=f"Unaccounted inventory ({scan_qty} units) of Batch {batch.batch_number} was scanned at {scanning_pharmacy} ({city}) after entering return/destruction status ({batch.status}).",
+                    is_suspicious=True,
+                    timestamp=datetime.utcnow()
+                )
+                db.add(event)
+
+            if not existing_alert:
+                alert_code = f"ALT-{uuid.uuid4().hex[:6].upper()}"
+                alert = Alert(
+                    alert_code=alert_code,
+                    alert_type="RE_ENTRY",
+                    severity="CRITICAL",
+                    batch_id=batch.id,
+                    title=f"CRITICAL RE-ENTRY DETECTED: {scan_qty} Unaccounted Units (Batch {batch.batch_number})",
+                    reason=f"Batch {batch.batch_number} (status {batch.status}) had {scan_qty} unaccounted/diverted units scanned into active retail billing at {scanning_pharmacy} in {city}.",
+                    location_city=city,
+                    status="OPEN",
+                    recommended_action="Block point-of-sale billing immediately. Quarantine stock and notify State Drug Control Authority.",
+                    timestamp=datetime.utcnow()
+                )
+                db.add(alert)
 
             # Generate or Update Investigation
             investigation = db.query(Investigation).filter(Investigation.batch_id == batch.id).first()

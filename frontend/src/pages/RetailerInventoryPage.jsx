@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Clock, AlertTriangle, Search, QrCode, Undo2 } from 'lucide-react';
+import { Package, Clock, AlertTriangle, Search, QrCode, Undo2, Info } from 'lucide-react';
 import { api } from '../services/api';
 import RiskBadge from '../components/RiskBadge';
 import BatchStatusBadge from '../components/BatchStatusBadge';
@@ -36,7 +36,7 @@ export default function RetailerInventoryPage() {
     const matchesSearch =
       b.batch_number.toLowerCase().includes(search.toLowerCase()) ||
       b.product_name.toLowerCase().includes(search.toLowerCase());
-    
+
     if (!matchesSearch) return false;
 
     if (filterState === 'NEAR_EXPIRY') return b.days_remaining >= 1 && b.days_remaining <= 60;
@@ -92,11 +92,10 @@ export default function RetailerInventoryPage() {
             <button
               key={tab.id}
               onClick={() => setFilterState(tab.id)}
-              className={`px-3 py-1.5 rounded-lg transition-all text-xs ${
-                filterState === tab.id
+              className={`px-3 py-1.5 rounded-lg transition-all text-xs ${filterState === tab.id
                   ? 'bg-blue-600 text-white font-semibold shadow-2xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
+                }`}
             >
               {tab.label}
             </button>
@@ -121,7 +120,15 @@ export default function RetailerInventoryPage() {
                   <th className="py-3 px-4">Expiry Date</th>
                   <th className="py-3 px-4">Days Left</th>
                   <th className="py-3 px-4">Status / State</th>
-                  <th className="py-3 px-4">Risk Score</th>
+                  <th className="py-3 px-4">
+                    <div className="flex items-center space-x-1 group relative cursor-help">
+                      <span>ANOMALY RISK</span>
+                      <Info className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition-colors" />
+                      <div className="absolute left-0 top-full mt-1 hidden group-hover:block z-30 w-56 bg-slate-900 text-white text-[10px] font-normal leading-tight p-2.5 rounded-lg shadow-xl border border-slate-700 tracking-normal capitalize-none normal-case">
+                        Fraud/compliance anomaly score. Expiry duration alone does not determine this score.
+                      </div>
+                    </div>
+                  </th>
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -147,8 +154,8 @@ export default function RetailerInventoryPage() {
                           b.days_remaining < 0
                             ? 'text-rose-700 font-semibold'
                             : b.days_remaining <= 60
-                            ? 'text-amber-700 font-semibold'
-                            : 'text-slate-600'
+                              ? 'text-amber-700 font-semibold'
+                              : 'text-slate-600'
                         }
                       >
                         {b.days_remaining < 0

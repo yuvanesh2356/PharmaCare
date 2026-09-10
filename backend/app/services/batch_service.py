@@ -85,6 +85,29 @@ class BatchService:
             "overall_compliance": overall_compliance
         }
 
+        # Calculate explicit quantity reconciliation
+        declared_qty = batch.return_quantity if batch.return_quantity > 0 else (batch.original_quantity if batch.status != "ACTIVE" else 0)
+        
+        # Check verified handoff quantity & initial unaccounted transit loss
+        handoff_verified = None
+        initial_unaccounted = 0
+        for h in batch.handoffs:
+            if h.declared_quantity > 0:
+                handoff_verified = h.verified_quantity
+                initial_unaccounted = max(0, h.declared_quantity - h.verified_quantity)
+                break
+
+        # Account for any POS re-entry scan of unaccounted units
+        reentry_scanned = sum(e.quantity for e in batch.events if e.event_code == "REENTRY_DETECTED")
+        unaccounted_qty = max(0, initial_unaccounted - reentry_scanned) if reentry_scanned > 0 else initial_unaccounted
+
+        verified_qty = handoff_verified if handoff_verified is not None else (batch.current_quantity if batch.status in ["DISTRIBUTOR_RECEIVED", "MANUFACTURER_RECEIVED", "DESTROYED", "CERTIFICATE_VERIFIED"] else 0)
+        
+        # Check destruction certificate quantity
+        cert_qty = batch.certificates[0].quantity_destroyed if (len(batch.certificates) > 0 and batch.certificates[0].verification_status == "VERIFIED") else 0
+        destroyed_qty = cert_qty if cert_qty > 0 else (verified_qty if batch.status in ["DESTROYED", "CERTIFICATE_VERIFIED"] else 0)
+        certified_qty = cert_qty
+
         batch_dict = {
             "id": batch.id,
             "batch_number": batch.batch_number,
@@ -99,6 +122,11 @@ class BatchService:
             "original_quantity": batch.original_quantity,
             "current_quantity": batch.current_quantity,
             "return_quantity": batch.return_quantity,
+            "declared_quantity": declared_qty,
+            "verified_quantity": verified_qty,
+            "destroyed_quantity": destroyed_qty,
+            "certified_quantity": certified_qty,
+            "unaccounted_quantity": unaccounted_qty,
             "current_owner_id": batch.current_owner_id,
             "current_owner_name": batch.current_owner.name if batch.current_owner else "Unknown Org",
             "current_location_city": batch.current_location_city,

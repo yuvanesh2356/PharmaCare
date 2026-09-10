@@ -12,14 +12,13 @@ class AnomalyDetector:
 
         # 1. Re-entry Fraud (Highest Severity - 54 pts base for critical fraud)
         reentry_events = [e for e in batch.events if e.event_code == "REENTRY_DETECTED"]
-        if reentry_events or (batch.status in ["DESTROYED", "CERTIFICATE_VERIFIED"] and any(
-            e.event_code == "REENTRY_DETECTED" or e.is_suspicious for e in batch.events
-        )):
+        if reentry_events:
+            scan_qty = reentry_events[0].quantity
             anomalies.append({
                 "type": "RE_ENTRY",
                 "points": 54,
                 "title": "Unauthorized Re-Entry Detected",
-                "description": "This batch was scanned into retail POS/inventory after entering the disposal/destruction pipeline."
+                "description": f"Unaccounted inventory ({scan_qty} units) of this batch was scanned into retail POS/inventory after entering the reverse disposal pipeline."
             })
 
         # 2. Certificate Inconsistencies / Mismatch
